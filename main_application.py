@@ -52,6 +52,9 @@ class PyPDFMerger(QMainWindow, gui):
         self.executeButton.clicked.connect(lambda: merger(self))
         self.speechOpenFileButton.clicked.connect(lambda: get_file(self.textToSpeechBrowser))
         self.speechReadButton.clicked.connect(lambda: speech(self))
+        self.interleaveCheckBox.stateChanged.connect(
+            lambda state: self.reverseSecondCheckBox.setEnabled(bool(state))
+        )
 
     def actions_triggered(self):
         """

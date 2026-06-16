@@ -82,6 +82,7 @@
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
             <layout class="QVBoxLayout" name="listLayout">
+
              <item>
               <layout class="QHBoxLayout" name="listButtonsHorizontalLayout">
                <item>
@@ -250,6 +251,52 @@
                 <bool>false</bool>
                </property>
               </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="interleaveLayout">
+             <item>
+              <widget class="QCheckBox" name="interleaveCheckBox">
+               <property name="text">
+                <string>Interleave Mode (Recto/Verso)</string>
+               </property>
+               <property name="toolTip">
+                <string>Alternate pages from two PDFs (one page from each)</string>
+               </property>
+               <property name="statusTip">
+                <string>Interleave pages from exactly 2 PDFs (for recto/verso scanning)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="reverseSecondCheckBox">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Reverse 2nd Doc</string>
+               </property>
+               <property name="toolTip">
+                <string>Reverse page order of second document (for flipped stack scanning)</string>
+               </property>
+               <property name="statusTip">
+                <string>Reverse the second document page order (use when versos were scanned with the stack flipped)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="interleaveSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
              </item>
             </layout>
            </item>

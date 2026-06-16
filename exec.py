@@ -51,6 +51,31 @@ def encrypt_file(parent, path, password):
     writer.write(path)
 
 
+def interleave_merge(parent, files):
+    from PyQt5.QtWidgets import QMessageBox
+    if len(files) != 2:
+        QMessageBox.warning(parent, "Interleave Error", "Interleave mode requires exactly 2 PDF files.")
+        return None
+
+    reader1 = PdfReader(files[0])
+    reader2 = PdfReader(files[1])
+    writer = PdfWriter()
+
+    pages1 = list(reader1.pages)
+    pages2 = list(reader2.pages)
+
+    if parent.reverseSecondCheckBox.isChecked():
+        pages2 = list(reversed(pages2))
+
+    for i in range(max(len(pages1), len(pages2))):
+        if i < len(pages1):
+            writer.add_page(pages1[i])
+        if i < len(pages2):
+            writer.add_page(pages2[i])
+
+    return writer
+
+
 def merger(parent):
     """
     Merge PDF files selected by the user in the parent GUI window.
@@ -68,56 +93,78 @@ def merger(parent):
     for file in range(parent.PDFList.count()):
         files.append(parent.PDFList.item(file).text())
 
-    # If there are selected files
-    if files:
-        merge = PdfMerger()
-        # Merge PDF files one by one
-        photo_list = []
+    if not files:
+        return
 
-        try:
-            for i, file in enumerate(files):
-                sleep(0.005)  # Add a small delay for better user experience
-                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    image_to_pdf(file)
-                    merge.append(f'{file}.pdf')
-                    photo_list.append(f'{file}.pdf') if f'{file}.pdf' not in photo_list else None
-                else:
-                    merge.append(file)
-                # Update progress bar
-                parent.progressBar.setValue(round((i + 1) * (100 / len(files))))
-
-            parent.progressBar.setValue(100)
-
-        except PyPDF2.errors.FileNotDecryptedError:
-            # If we encounter an encrypted file during processing, it will show us an error
-            handling_errors(parent, merge, photo_list)
-            print('There are Decrypted Files!')
-            return None
-        except Exception:
-            # Raise any other exceptions that occur during PDF processing
-            handling_errors(parent, merge, photo_list)
-            print('This is an Error!')
-            return None
-
-        # Save the merged PDF file
+    # Interleave mode: alternate pages from two PDFs (recto/verso)
+    if parent.interleaveCheckBox.isChecked():
+        writer = interleave_merge(parent, files)
+        if writer is None:
+            parent.progressBar.setValue(0)
+            parent.progressBar.hide()
+            return
         path = save_merged_file(parent)
-        if not path == "":
-            # Ensure the file has a PDF extension
+        if path:
             if not path.lower().endswith('.pdf'):
-                path += path + '.pdf'
-            add_metadata(parent, merge)
-            merge.write(path)  # Write the merged PDF to the specified path
-            merge.close()  # Close the merger
-            remove_image(photo_list)
-            # If a password is provided, encrypt the PDF file
+                path += '.pdf'
+            add_metadata(parent, writer)
+            with open(path, 'wb') as f:
+                writer.write(f)
             password = parent.passwordInput.text()
-            if len(password) != 0:
+            if password:
                 encrypt_file(parent, path, password)
-            # Open the merged PDF file with the default PDF viewer
             from subprocess import Popen
             Popen(path, shell=True)
         parent.progressBar.setValue(0)
         parent.progressBar.hide()
+        return
+
+    # Standard merge
+    merge = PdfMerger()
+    photo_list = []
+
+    try:
+        for i, file in enumerate(files):
+            sleep(0.005)  # Add a small delay for better user experience
+            if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_to_pdf(file)
+                merge.append(f'{file}.pdf')
+                photo_list.append(f'{file}.pdf') if f'{file}.pdf' not in photo_list else None
+            else:
+                merge.append(file)
+            # Update progress bar
+            parent.progressBar.setValue(round((i + 1) * (100 / len(files))))
+
+        parent.progressBar.setValue(100)
+
+    except PyPDF2.errors.FileNotDecryptedError:
+        handling_errors(parent, merge, photo_list)
+        print('There are Decrypted Files!')
+        return None
+    except Exception:
+        handling_errors(parent, merge, photo_list)
+        print('This is an Error!')
+        return None
+
+    # Save the merged PDF file
+    path = save_merged_file(parent)
+    if not path == "":
+        # Ensure the file has a PDF extension
+        if not path.lower().endswith('.pdf'):
+            path += '.pdf'
+        add_metadata(parent, merge)
+        merge.write(path)  # Write the merged PDF to the specified path
+        merge.close()  # Close the merger
+        remove_image(photo_list)
+        # If a password is provided, encrypt the PDF file
+        password = parent.passwordInput.text()
+        if len(password) != 0:
+            encrypt_file(parent, path, password)
+        # Open the merged PDF file with the default PDF viewer
+        from subprocess import Popen
+        Popen(path, shell=True)
+    parent.progressBar.setValue(0)
+    parent.progressBar.hide()
 
 
 def save_merged_file(parent):

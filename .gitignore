@@ -51,7 +51,11 @@ fabric.properties
 
 venv
 
+__pycache__
+
 # Test PDF Files
 *.pdf
 
 Icons/Logo.psd
+
+
