@@ -56,6 +56,9 @@ def interleave_merge(parent, files):
     if len(files) != 2:
         QMessageBox.warning(parent, "Interleave Error", "Interleave mode requires exactly 2 PDF files.")
         return None
+    if not all(str(f).lower().endswith('.pdf') for f in files):
+        QMessageBox.warning(parent, "Interleave Error", "Interleave mode requires exactly 2 PDF files (no images).")
+        return None
 
     reader1 = PdfReader(files[0])
     reader2 = PdfReader(files[1])
